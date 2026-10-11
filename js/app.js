@@ -83,6 +83,7 @@
 
   function setSound(on) {
     soundOn = on;
+    if (typeof disarm === 'function') disarm();
     soundBtn.textContent = 'Sonido: ' + (on ? 'on' : 'off');
     soundBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
     if (!ambient && audioCfg.ambient) ambient = makeAudio(audioCfg.ambient, true, 0.35);
@@ -102,6 +103,56 @@
   soundBtn.title = hasAudio ? 'Activar o silenciar el sonido' : 'Aún no hay archivos en la carpeta Sonidos/';
   soundBtn.addEventListener('click', function () { setSound(!soundOn); });
   CDW.sound = { play: play, set: setSound };
+
+  /* Música automática al entrar. Los navegadores bloquean el audio hasta que haya una
+     interacción, así que si lo bloquean, empieza con el primer clic/toque/tecla. */
+  var armed = false;
+  var armEvents = ['pointerdown', 'pointerup', 'touchend', 'keydown'];
+
+  function markOn() {
+    soundOn = true;
+    soundBtn.textContent = 'Sonido: on';
+    soundBtn.setAttribute('aria-pressed', 'true');
+  }
+
+  function disarm() {
+    if (!armed) return;
+    armed = false;
+    armEvents.forEach(function (n) { doc.removeEventListener(n, onFirstGesture, true); });
+  }
+
+  function onFirstGesture(e) {
+    if (e.target && e.target.closest && e.target.closest('#sound-toggle')) return; // lo gestiona el propio botón
+    if (soundOn) { disarm(); return; }
+    var p = ambient.play();
+    if (p && p.then) {
+      p.then(function () { markOn(); disarm(); })
+       .catch(function (err) { if (err && err.name !== 'NotAllowedError') disarm(); });
+    }
+  }
+
+  function autoStart() {
+    if (!audioCfg.ambient) return;
+    ambient = ambient || makeAudio(audioCfg.ambient, true, 0.35);
+    var p = ambient.play();
+    if (p && p.then) {
+      p.then(markOn).catch(function (err) {
+        if (err && err.name === 'NotAllowedError' && !armed) {
+          armed = true;
+          armEvents.forEach(function (n) { doc.addEventListener(n, onFirstGesture, true); });
+        }
+      });
+    }
+  }
+
+  // Pausa la música cuando la pestaña no está visible y la reanuda al volver
+  doc.addEventListener('visibilitychange', function () {
+    if (!ambient || !soundOn) return;
+    if (doc.hidden) ambient.pause();
+    else { var q = ambient.play(); if (q && q.catch) q.catch(function () {}); }
+  });
+
+  autoStart();
 
   doc.addEventListener('click', function (e) {
     if (e.target.closest && e.target.closest('.btn, .opt, .dock button, .round, .thumb')) play('click');
