@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Cinnamoroll Dream World</title>
+  <meta name="description" content="Un test, una colina de flores y una pequeña historia en Cinnamoroll Dream World.">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- Fondo estático: fondo-pc.png en horizontal y fondo-movil.png en vertical (ver css/styles.css) -->
+  <div class="scene-bg depth" style="--d:.25" aria-hidden="true"></div>
+
+  <!-- Capas de atmósfera -->
+  <canvas id="fx" aria-hidden="true"></canvas>
+  <div class="sun depth" style="--d:.6" aria-hidden="true"></div>
+  <div class="light" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <!-- Barras de cine (activas en la historia) y transición -->
+  <div class="letterbox top" aria-hidden="true"></div>
+  <div class="letterbox bottom" aria-hidden="true"></div>
+  <div class="curtain" id="curtain" aria-hidden="true"></div>
+
+  <button class="sound-btn" id="sound-toggle" type="button" aria-pressed="false">Sonido: off</button>
+
+  <main>
+    <!-- INICIO -->
+    <section class="screen is-active" id="inicio" aria-label="Inicio">
+      <div class="layer" id="inicio-sprites"></div>
+      <div class="content hero">
+        <h1>Cinnamoroll<span>Dream World</span></h1>
+        <p class="lead">Haz el test para descubrir tu personaje, explora la colina de flores y vive una pequeña historia.</p>
+        <button class="btn primary big" type="button" data-go="test">Empezar el sueño</button>
+      </div>
+    </section>
+
+    <!-- TEST -->
+    <section class="screen" id="test" aria-label="Test">
+      <div class="content">
+        <div class="card test-card" id="test-card"></div>
+      </div>
+    </section>
+
+    <!-- PERSONAJES -->
+    <section class="screen" id="personajes" aria-label="Personajes">
+      <div class="content explore">
+        <div class="stage-wrap">
+          <div class="layer stage" id="explore-stage"></div>
+        </div>
+        <div class="card explore-info" id="explore-info">
+          <h2 id="explore-name"></h2>
+          <p id="explore-desc"></p>
+          <div class="tags" id="explore-tags"></div>
+        </div>
+        <div class="explore-nav">
+          <button class="round" id="prev-char" type="button" aria-label="Personaje anterior">&#8249;</button>
+          <div class="thumbs" id="explore-thumbs"></div>
+          <button class="round" id="next-char" type="button" aria-label="Personaje siguiente">&#8250;</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- HISTORIA -->
+    <section class="screen" id="historia" aria-label="Historia">
+      <div class="layer" id="story-stage"></div>
+      <div class="story-tint" id="story-tint" aria-hidden="true"></div>
+      <div class="content story">
+        <div class="card story-panel">
+          <p class="story-counter" id="story-counter">1 / 5</p>
+          <h2 id="story-title"></h2>
+          <p class="story-text" id="story-text" title="Toca para ver el texto completo"></p>
+          <div class="actions">
+            <button class="btn" id="story-prev" type="button">Anterior</button>
+            <button class="btn primary" id="story-next" type="button">Siguiente</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="dock" aria-label="Navegación principal">
+    <button type="button" data-go="inicio">Inicio</button>
+    <button type="button" data-go="test">Test</button>
+    <button type="button" data-go="personajes">Personajes</button>
+    <button type="button" data-go="historia">Historia</button>
+  </nav>
+
+  <script src="js/config.js"></script>
+  <script src="js/effects.js"></script>
+  <script src="js/characters.js"></script>
+  <script src="js/test.js"></script>
+  <script src="js/explore.js"></script>
+  <script src="js/story.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
