@@ -131,6 +131,179 @@ CDW.config = {
     }
   ],
 
+  /* ---------- TEST PERSONALIZADO PARA MELANY ----------
+     js/test.js usa este bloque. Si NO existiera (config.js antiguo), test.js vuelve a usar
+     el array "questions" de arriba, que se conserva sin cambios como respaldo.
+
+     REGLA DE LA PRIMERA OPORTUNIDAD
+       La primera vez que se COMPLETA el test (en este navegador) el resultado es siempre
+       firstResultId, sin mirar las respuestas. Se anota en localStorage (storageKey) al
+       mostrar ese resultado. Desde la segunda vez el resultado sale de las puntuaciones.
+
+     PUNTUACIONES (scores): puntos que suma cada opción a cada personaje (id), como en el
+     test original: 2 al personaje que mejor encaja y 1 a uno secundario. Se apoyan SOLO en
+     lo que existe en "characters" (sus tags, descripción y nombre):
+       - tierna / tranquila / soñadora / nubes / cielo ........ c1 (Tranquilo, Soñador, Nubes)
+       - alegre / enérgica / curiosa / jardín .................. c3 (Curiosa, Alegre, Flores)
+       - juguetona / abrazos / consuelo ........................ c4 (Juguetón, Abrazos)
+       - cariño / pequeños detalles / compartir / cuidar ....... c2 (Cariñoso, Detallista, Compartir)
+       - descanso / ritmo sin prisa / estar a solas ............ c5 (Relajado, Siesta, Tierno)
+     LIMITACIONES: ningún personaje tiene un rasgo "misterioso/observador" ni "responsable/
+     protector". Las opciones reservadas/observadoras se reparten entre c5 y c1 (lo más
+     cercano: calma y ritmo propio) y las protectoras entre c2 y c4 (cariño y abrazos).
+     Las dos veces que una opción habla de "nubes" (preguntas 5 y 10) el secundario es c4 por
+     su nombre ("Amigo nubecita"), no por una descripción explícita.
+     Empate: gana el primero en el orden de "characters" (siempre el mismo resultado). */
+  melanyQuiz: {
+    storageKey: 'cdw_melany_quiz_first_result_used',
+    firstResultId: 'c1',        // el conejito blanco de ojos azules (Cinnamoroll)
+    secondaryRatio: 0.6,        // se menciona un segundo personaje si llega al 60 % del primero
+
+    intro: {
+      first: {
+        kicker: 'Un pequeño regalo para ti',
+        title: 'Melany, bienvenida a tu pequeño rincón entre las nubes. ☁️💙',
+        text: 'Responde a cada pregunta con sinceridad y descubre qué personaje mágico acompaña mejor tu personalidad.',
+        note: 'No hay respuestas correctas, y puedes tomarte todo el tiempo que quieras.',
+        button: 'Comenzar'
+      },
+      returning: {
+        kicker: 'Otra vez entre las nubes',
+        title: 'Melany, qué bonito verte de nuevo por aquí. ☁️',
+        text: 'Esta vez, tus respuestas dirán qué personaje se parece más a ti en este momento.',
+        note: 'Sin prisa: aquí nadie corre.',
+        button: 'Comenzar'
+      }
+    },
+
+    /* Una línea suave bajo cada pregunta (una por pregunta, en orden). */
+    transitions: [
+      'Sin prisa: aquí no hay respuestas correctas. ☁️',
+      'Cada elección enciende una pequeña estrella. ✨',
+      'Puedes responder a tu ritmo, como lo hacen las nubes.',
+      'Melany, este cielo es tuyo mientras quieras quedarte. 💙',
+      'Vas por la mitad. Los pequeños detalles significan mucho. 💙',
+      'El cielo azul sigue aquí, esperándote. ☁️',
+      'Otra estrella se enciende. ✨',
+      'Ya falta menos; sigue a tu ritmo.',
+      'Casi llegas a la última nube. ☁️',
+      'Última pregunta. Gracias por responder con calma, Melany. 💙'
+    ],
+
+    firstResult: {
+      kicker: 'Tu historia comienza con…',
+      text: 'Melany, hay un pequeño mundo entre las nubes que estaba esperando tu llegada. Hoy, tu historia comienza con un conejito celestial de ojos azules. ☁️💙',
+      note: 'Los pequeños detalles significan mucho, y este es el primero de ellos. ✨'
+    },
+
+    laterResult: {
+      kicker: 'Esta vez, tu personaje es…',
+      /* Una línea por personaje, redactada sobre las RESPUESTAS de hoy (no sobre cómo es Melany). */
+      perCharacter: {
+        c1: 'Tus respuestas de hoy miran al cielo con calma, igual que él.',
+        c2: 'Tus respuestas de hoy guardan cariño y pequeños detalles, justo lo que él lleva para compartir. 🧸',
+        c3: 'Tus respuestas de hoy tienen curiosidad y alegría, como las flores de su cabeza. 🌸',
+        c4: 'Tus respuestas de hoy suenan juguetonas y esponjosas, como un abrazo con sonrisa. 🤍',
+        c5: 'Tus respuestas de hoy piden un ritmo sin prisa y un rato de descanso, y eso también es precioso. 🌙'
+      },
+      secondary: 'También hay un poquito de {name} en tus respuestas.',
+      closing: 'A veces, los pequeños detalles guardan la magia más bonita. Este pequeño mundo tiene un lugar especial para ti, Melany. ✨'
+    },
+
+    questions: [
+      {
+        text: '¿Cómo describirías tu personalidad?',
+        options: [
+          { label: 'Tierna, tranquila y soñadora.',        scores: { c1: 2, c5: 1 } },
+          { label: 'Alegre, energética y divertida.',      scores: { c3: 2, c4: 1 } },
+          { label: 'Reservada, misteriosa y observadora.', scores: { c5: 2, c1: 1 } },
+          { label: 'Amable, responsable y protectora.',    scores: { c2: 2, c4: 1 } }
+        ]
+      },
+      {
+        text: '¿Qué prefieres hacer en un día libre?',
+        options: [
+          { label: 'Ver películas o descansar cómodamente.',    scores: { c5: 2, c1: 1 } },
+          { label: 'Salir y hacer algo divertido.',             scores: { c3: 2, c4: 1 } },
+          { label: 'Escuchar música y estar en mi mundo.',      scores: { c1: 2, c5: 1 } },
+          { label: 'Pasar tiempo con las personas que quiero.', scores: { c4: 2, c2: 1 } }
+        ]
+      },
+      {
+        text: 'Cuando conoces a alguien nuevo, ¿cómo eres?',
+        options: [
+          { label: 'Tímida al principio, pero cariñosa.',     scores: { c5: 2, c2: 1 } },
+          { label: 'Hablo mucho y hago bromas.',              scores: { c4: 2, c3: 1 } },
+          { label: 'Observo primero y después me abro.',      scores: { c1: 2, c5: 1 } },
+          { label: 'Intento que se sienta en confianza.',     scores: { c2: 2, c4: 1 } }
+        ]
+      },
+      {
+        text: '¿Qué es lo más importante para ti en una amistad?',
+        options: [
+          { label: 'El cariño y los pequeños detalles.',             scores: { c2: 2, c4: 1 } },
+          { label: 'Reír y vivir aventuras juntos.',                 scores: { c3: 2, c4: 1 } },
+          { label: 'La confianza y que respeten mi espacio.',        scores: { c5: 2, c1: 1 } },
+          { label: 'La lealtad y estar cuando me necesitan.',        scores: { c4: 2, c2: 1 } }
+        ]
+      },
+      {
+        text: '¿Cuál de estos lugares elegirías?',
+        options: [
+          { label: 'Un cielo lleno de nubes y estrellas.',      scores: { c1: 2, c4: 1 } },
+          { label: 'Un parque lleno de colores.',               scores: { c3: 2, c4: 1 } },
+          { label: 'Una habitación oscura con luces bonitas.',  scores: { c5: 2, c1: 1 } },
+          { label: 'Un jardín tranquilo y acogedor.',           scores: { c3: 2, c2: 1 } }
+        ]
+      },
+      {
+        text: '¿Cómo reaccionas cuando estás triste?',
+        options: [
+          { label: 'Busco consuelo en alguien de confianza.',          scores: { c4: 2, c2: 1 } },
+          { label: 'Intento distraerme y animarme.',                   scores: { c3: 2, c4: 1 } },
+          { label: 'Prefiero procesarlo a solas.',                     scores: { c5: 2, c1: 1 } },
+          { label: 'Hablo con alguien que me haga sentir segura.',     scores: { c2: 2, c5: 1 } }
+        ]
+      },
+      {
+        text: '¿Qué detalle te haría más feliz?',
+        options: [
+          { label: 'Una carta hecha especialmente para mí.',               scores: { c2: 2, c1: 1 } },
+          { label: 'Una sorpresa divertida e inesperada.',                 scores: { c3: 2, c4: 1 } },
+          { label: 'Algo pequeño que demuestre que me conocen.',           scores: { c2: 2, c5: 1 } },
+          { label: 'Que alguien recuerde algo importante para mí.',        scores: { c1: 2, c2: 1 } }
+        ]
+      },
+      {
+        text: '¿Qué papel tienes en tu grupo de amigos?',
+        options: [
+          { label: 'La dulce que escucha a todos.',                       scores: { c2: 2, c5: 1 } },
+          { label: 'La que aporta energía y diversión.',                  scores: { c3: 2, c4: 1 } },
+          { label: 'La tranquila que nota hasta los pequeños detalles.',  scores: { c1: 2, c2: 1 } },
+          { label: 'La que cuida y apoya a los demás.',                   scores: { c2: 2, c4: 1 } }
+        ]
+      },
+      {
+        text: '¿Qué frase se parece más a ti?',
+        options: [
+          { label: 'Los pequeños momentos hacen la vida bonita.',        scores: { c1: 2, c2: 1 } },
+          { label: 'Siempre hay algo nuevo por descubrir.',              scores: { c3: 2, c4: 1 } },
+          { label: 'No todos conocen mi verdadero mundo.',               scores: { c5: 2, c1: 1 } },
+          { label: 'Quiero que las personas que amo estén bien.',        scores: { c4: 2, c2: 1 } }
+        ]
+      },
+      {
+        text: 'Si fueras un personaje de un mundo mágico, ¿qué serías?',
+        options: [
+          { label: 'Un conejito celestial entre las nubes.',   scores: { c1: 2, c4: 1 } },
+          { label: 'Una criatura arcoíris llena de energía.',  scores: { c3: 2, c4: 1 } },
+          { label: 'Un espíritu de estrellas y secretos.',     scores: { c5: 2, c1: 1 } },
+          { label: 'Un guardián mágico del jardín.',           scores: { c2: 2, c3: 1 } }
+        ]
+      }
+    ]
+  },
+
   /* ---------- HISTORIA ----------
      Cada capítulo: título, texto, color de ambiente (tint) y escena
      (personajes que aparecen, con posición y dirección de entrada). */

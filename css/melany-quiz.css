@@ -1,0 +1,82 @@
+/* =========================================================
+   TEST PERSONALIZADO PARA MELANY: estilos añadidos.
+   Solo contiene clases NUEVAS (intro, pista bajo la pregunta, opción elegida,
+   notas del resultado y panel de pruebas). No redefine nada de styles.css ni enhance.css.
+   ========================================================= */
+
+.melany-intro { text-align: center; }
+.melany-intro .melany-title { margin: 6px 0 14px; }
+.melany-intro .result-text { max-width: 520px; }
+.melany-note {
+  max-width: 480px;
+  margin: 10px auto 0;
+  font-size: 0.98rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+.melany-closing { margin-top: 14px; }
+
+/* Línea suave bajo cada pregunta */
+.q-hint {
+  margin: -8px 0 16px;
+  font-size: 0.95rem;
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+/* Opción ya elegida (al volver a una pregunta anterior) */
+.opt.is-picked {
+  border-color: var(--accent);
+  background: #fff4fa;
+}
+
+/* Botones Anterior / Siguiente */
+.test-nav { margin-top: 18px; }
+
+/* ---------- MODO DE PRUEBA (solo con ?cdw_dev=1) ---------- */
+.melany-dev {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 9999;
+  max-width: min(320px, calc(100vw - 150px));
+  display: grid;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 2px dashed #c0392b;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #7a1f14;
+  font-size: 0.72rem;
+  line-height: 1.3;
+  -webkit-user-select: text;
+  user-select: text;
+}
+.melany-dev button {
+  padding: 5px 8px;
+  border: 1px solid #c0392b;
+  border-radius: 8px;
+  background: #fff;
+  color: #7a1f14;
+  font-size: 0.72rem;
+  text-align: left;
+}
+.melany-dev-scores {
+  margin-top: 10px;
+  font-size: 0.78rem;
+  color: #7a1f14;
+  word-break: break-word;
+}
+
+/* ---------- Tarjeta alta en móviles ----------
+   Los textos personalizados hacen la tarjeta del test más alta que antes. Con "align-items:
+   center" en .screen, el contenido que no cabe se cortaba por arriba y no se podía recorrer.
+   Con margen automático en el contenedor del test: si cabe, queda centrado igual que antes;
+   si no cabe, empieza arriba y se desplaza con normalidad. Solo afecta a la pantalla del test. */
+#test > .content { margin-top: auto; margin-bottom: auto; }
+
+@media (max-width: 720px) {
+  #test .result-stage { height: clamp(130px, 20vh, 190px); }
+  .melany-note { margin-top: 8px; font-size: 0.92rem; }
+  .melany-closing { margin-top: 10px; }
+}
