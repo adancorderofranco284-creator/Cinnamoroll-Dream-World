@@ -5,6 +5,10 @@
 */
 window.CDW = window.CDW || {};
 
+/* Sello de versión: app.js comprueba que coincide con el suyo. Si no, hay archivos mezclados
+   (por ejemplo un config.js antiguo en caché o en GitHub Pages) y lo avisa en la consola. */
+CDW.build = '2026-10-12-musica-v3';
+
 /* Registro de módulos: cada archivo de funcionalidad se registra aquí y app.js lo inicia. */
 CDW.modules = {};
 CDW.hooks = {};

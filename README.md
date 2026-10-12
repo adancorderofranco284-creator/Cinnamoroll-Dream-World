@@ -43,7 +43,7 @@ cinnamoroll-dream-world/
 - **Preguntas y puntuaciones del test:** `questions` en `js/config.js`. Cada opción suma puntos a los personajes que indique.
 - **Capítulos de la historia:** `story.chapters` en `js/config.js` (texto, color de ambiente y personajes en escena).
 - **Posición de los personajes en la portada:** `home` en `js/config.js`.
-- **Sonidos:** `audio` en `js/config.js`. Pon la ruta, por ejemplo `ambient: 'Sonidos/ambiente.mp3'`. Mientras esté en `null`, no suena nada. El botón "Sonido" activa o desactiva la música de fondo.
+- **Sonidos:** `audio.playlist` en `js/config.js`: lista de rutas a las canciones de `Sonidos/`, en orden (suenan en bucle). Si cambias archivos de la web, sube también `index.html` y recarga sin caché (Ctrl+F5). El botón "Sonido" activa o desactiva la música de fondo.
 - **Colores y tamaños:** variables al inicio de `css/styles.css`.
 
 ## Imágenes de personajes
@@ -60,7 +60,7 @@ según lo que se ve en cada imagen y conviene cambiarlos en `config.js` por los 
   blanco, ese trozo de oreja se ve sólo con el contorno. Para corregirlo, hay que exportar de nuevo la imagen con margen.
 - **IMG_8614.PNG:** también toca el borde derecho de la imagen original.
 - **Referencias/** está vacía, así que no se ha usado ninguna referencia visual adicional.
-- **Sonidos/** está vacía. El código de audio está listo, pero no se ha probado con archivos de sonido reales.
+- **Sonidos/** contiene las cuatro canciones de la lista. La reproducción en navegador real no se ha probado en Safari/iOS ni Firefox.
 
 ## Compatibilidad y pruebas
 

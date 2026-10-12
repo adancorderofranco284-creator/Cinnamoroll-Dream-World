@@ -62,9 +62,18 @@
   var soundBtn = doc.getElementById('sound-toggle');
   var audioCfg = CDW.config.audio || {};
 
-  /* Lista de canciones (config.audio.playlist). Compatibilidad: si solo existe audio.ambient, se usa como lista de una. */
+  /* Lista de canciones: SOLO config.audio.playlist. Ya no existe ningún valor por defecto ni
+     reserva (antes audio.ambient), así que un config.js antiguo nunca puede resucitar una canción vieja. */
+  var APP_BUILD = '2026-10-12-musica-v3';
   var tracks = (audioCfg.playlist || []).filter(Boolean);
-  if (!tracks.length && audioCfg.ambient) tracks = [audioCfg.ambient];
+  if (CDW.build !== APP_BUILD) {
+    console.error('[CDW] Archivos desincronizados: app.js es "' + APP_BUILD + '" y config.js es "' + (CDW.build || 'antiguo, sin sello') +
+      '". Sube/actualiza los dos y recarga sin caché (Ctrl+F5).');
+  }
+  if (audioCfg.ambient) {
+    console.error('[CDW] config.js usa audio.ambient ("' + audioCfg.ambient + '"), que ya no se utiliza. Es un config.js antiguo: se ignora.');
+  }
+  console.info('[CDW] Música: ' + tracks.length + ' canción(es) en la lista. Primera: ' + (tracks[0] || '(ninguna)'));
   var trackIndex = 0;
   var failStreak = 0;
   var wantMusic = false;   // el usuario (o el arranque automático) quiere música sonando
@@ -113,14 +122,36 @@
       p.then(function () { if (wantMusic && !soundOn) markOn(); })
        .catch(function (err) {
         if (!err || err.name === 'AbortError') return;
-        if (err.name === 'NotAllowedError') { armGesture(); return; }
-        console.warn('[CDW] No se pudo reproducir:', tracks[trackIndex], err);
+        if (err.name === 'NotAllowedError') { console.info('[CDW] El navegador bloqueó la reproducción automática (no es un error del archivo): esperando la primera interacción.'); armGesture(); return; }
+        console.warn('[CDW] No se pudo reproducir "' + tracks[trackIndex] + '": ' + err.name + ' — ' + err.message);
       });
     }
   }
 
+  var MEDIA_ERRORS = { 1: 'MEDIA_ERR_ABORTED', 2: 'MEDIA_ERR_NETWORK', 3: 'MEDIA_ERR_DECODE', 4: 'MEDIA_ERR_SRC_NOT_SUPPORTED' };
+
+  function describeError(el) {
+    var e = el && el.error;
+    if (!e) return 'sin detalle del navegador';
+    return (MEDIA_ERRORS[e.code] || ('código ' + e.code)) + (e.message ? ' — ' + e.message : '');
+  }
+
+  /* Pregunta al servidor por el archivo para distinguir "no existe" (404) de "formato no compatible". */
+  function diagnose(url, name) {
+    if (typeof fetch !== 'function' || typeof location === 'undefined' || location.protocol === 'file:') return;
+    fetch(url, { method: 'HEAD', cache: 'no-store' }).then(function (r) {
+      console.warn('[CDW] Diagnóstico de "' + name + '": HTTP ' + r.status + ' ' + r.statusText +
+        ', Content-Type: ' + r.headers.get('content-type') +
+        (r.status === 404 ? ' → el servidor no tiene ese archivo con ese nombre exacto.' : ''));
+    }).catch(function (err) {
+      console.warn('[CDW] Diagnóstico de "' + name + '" no disponible:', err && err.message);
+    });
+  }
+
   function onTrackError() {
-    console.warn('[CDW] No se pudo cargar la canción:', tracks[trackIndex]);
+    var name = tracks[trackIndex];
+    console.warn('[CDW] No se pudo cargar la canción: "' + name + '" (URL: ' + ambient.src + ') → ' + describeError(ambient));
+    diagnose(ambient.src, name);
     failStreak++;
     if (failStreak >= tracks.length) {
       console.error('[CDW] Ninguna canción de la lista se pudo cargar.');
@@ -186,13 +217,18 @@
   }
 
   function autoStart() {
-    if (!tracks.length) return;
+    if (!tracks.length) { console.error('[CDW] No hay canciones en config.audio.playlist: no se reproduce nada.'); return; }
     ambient = ambient || makeMusic();
     wantMusic = true;
     var p = ambient.play();
     if (p && p.then) {
       p.then(markOn).catch(function (err) {
-        if (err && err.name === 'NotAllowedError') armGesture();
+        if (err && err.name === 'NotAllowedError') {
+          console.info('[CDW] El navegador bloqueó la reproducción automática (no es un error del archivo): esperando la primera interacción.');
+          armGesture();
+        } else if (err && err.name !== 'AbortError') {
+          console.warn('[CDW] No se pudo iniciar "' + tracks[trackIndex] + '": ' + err.name + ' — ' + err.message);
+        }
       });
     }
   }
