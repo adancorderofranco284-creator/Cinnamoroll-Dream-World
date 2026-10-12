@@ -1,0 +1,383 @@
+/* =========================================================
+   CINNAMOROLL DREAM WORLD: mejora visual (se carga DESPUÉS de styles.css)
+   Entradas con desenfoque, atmósfera en capas, doodles flotantes,
+   transición en iris, dock deslizante, ripples y pantalla de carga.
+   ========================================================= */
+
+/* ---------- Pantalla de carga ---------- */
+.loader {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 50% 40%, #ffffff, #dff1ff 55%, #ffd9ec 100%);
+  transition: opacity 0.7s ease, visibility 0.7s, transform 0.7s ease, filter 0.7s ease;
+  animation: loaderFail 0.6s ease 5s forwards; /* seguro: se oculta aunque falle el JS */
+}
+.loader.done { opacity: 0; visibility: hidden; transform: scale(1.08); filter: blur(8px); }
+.loader-inner { text-align: center; }
+.loader-img {
+  width: min(38vw, 24vh, 190px);
+  height: auto;
+  filter: drop-shadow(0 14px 14px rgba(15, 60, 110, 0.28));
+  animation: loaderBounce 1.1s cubic-bezier(0.3, 0.7, 0.4, 1) infinite;
+  transform-origin: 50% 90%;
+}
+.loader-text { margin-top: 14px; font-weight: 700; color: var(--ink); letter-spacing: 0.06em; }
+.loader-text span { display: inline-block; animation: dotHop 1.2s ease-in-out infinite; }
+.loader-text span:nth-child(2) { animation-delay: 0.15s; }
+.loader-text span:nth-child(3) { animation-delay: 0.3s; }
+.loader-bar {
+  width: min(52vw, 220px);
+  height: 8px;
+  margin: 14px auto 0;
+  border-radius: 999px;
+  background: rgba(22, 54, 92, 0.12);
+  overflow: hidden;
+}
+.loader-bar i {
+  display: block;
+  width: 6%;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ff9ec7, #5cb8ff);
+  transition: width 0.4s ease;
+}
+/* Mientras carga, las entradas esperan (así no ocurren detrás de la pantalla de carga) */
+body.is-loading main *,
+body.is-loading .dock,
+body.is-loading .sound-btn { animation-play-state: paused !important; }
+
+/* ---------- Fondo: respiración lenta ---------- */
+.scene-bg { animation: bgBreath 26s ease-in-out infinite alternate; }
+
+/* ---------- Atmósfera en capas ---------- */
+.ambience {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background-color: var(--amb, transparent);
+  transition: background-color 1.4s ease;
+}
+body[data-screen="inicio"] { --amb: rgba(255, 205, 232, 0.10); }
+body[data-screen="test"] { --amb: rgba(150, 205, 255, 0.16); }
+body[data-screen="personajes"] { --amb: rgba(255, 240, 190, 0.14); }
+body[data-screen="historia"] { --amb: transparent; }
+
+.aurora {
+  position: fixed;
+  inset: -20%;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.55;
+  mix-blend-mode: screen;
+  background:
+    radial-gradient(40% 35% at 25% 30%, rgba(255, 182, 214, 0.40), transparent 70%),
+    radial-gradient(35% 40% at 75% 65%, rgba(140, 210, 255, 0.40), transparent 70%),
+    radial-gradient(30% 30% at 55% 15%, rgba(255, 250, 200, 0.32), transparent 70%);
+  animation: auroraDrift 24s ease-in-out infinite alternate;
+}
+
+.rays {
+  position: fixed;
+  width: 140vmax;
+  height: 140vmax;
+  left: calc(112vw - 31vmin - 70vmax);
+  top: calc(-14vh + 31vmin - 70vmax);
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.45;
+  mix-blend-mode: screen;
+  background: repeating-conic-gradient(rgba(255, 255, 255, 0.24) 0 5deg, transparent 5deg 17deg);
+  -webkit-mask-image: radial-gradient(circle, #000 0, transparent 50%);
+  mask-image: radial-gradient(circle, #000 0, transparent 50%);
+  animation: spin 110s linear infinite;
+}
+
+.cloud {
+  position: fixed;
+  left: 0;
+  top: var(--t, 10%);
+  width: var(--w, 40vmin);
+  height: calc(var(--w, 40vmin) * 0.4);
+  z-index: 1;
+  pointer-events: none;
+  opacity: var(--o, 0.45);
+  filter: blur(var(--b, 4px));
+  background:
+    radial-gradient(closest-side at 30% 62%, #fff, rgba(255, 255, 255, 0)),
+    radial-gradient(closest-side at 55% 42%, #fff, rgba(255, 255, 255, 0)),
+    radial-gradient(closest-side at 76% 64%, #fff, rgba(255, 255, 255, 0));
+  animation: cloudDrift var(--sp, 100s) linear var(--dl, 0s) infinite;
+}
+
+.doodles span.doodle {
+  position: fixed;
+  left: var(--x);
+  top: var(--y);
+  z-index: 1;
+  pointer-events: none;
+}
+.doodle svg {
+  display: block;
+  width: var(--sz, 28px);
+  height: var(--sz, 28px);
+  color: rgb(var(--c, 255, 255, 255));
+  opacity: 0.8;
+  animation: doodleFloat var(--fd, 7s) ease-in-out var(--fdl, 0s) infinite, twinkle var(--td, 4s) ease-in-out var(--tdl, 0s) infinite;
+}
+.doodle svg.fill { fill: currentColor; }
+.doodle svg.line { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ---------- Transición en iris desde el punto tocado ---------- */
+.curtain {
+  opacity: 1;
+  background: radial-gradient(circle at var(--cx, 50%) var(--cy, 60%), #ffffff 0, #dff1ff 45%, #ffd9ec 100%);
+  clip-path: circle(0% at var(--cx, 50%) var(--cy, 60%));
+  transition: clip-path 0.55s cubic-bezier(0.7, 0, 0.25, 1);
+}
+.curtain.on {
+  clip-path: circle(150% at var(--cx, 50%) var(--cy, 60%));
+  backdrop-filter: none;
+}
+.curtain-sprite {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(30vw, 20vh, 150px);
+  height: auto;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 12px 12px rgba(15, 60, 110, 0.25));
+  opacity: 0;
+  pointer-events: none;
+}
+.curtain.on .curtain-sprite { animation: curtainHop 0.9s ease-in-out both; }
+
+.screen { transform: scale(1.04); filter: blur(8px); transition: opacity 0.6s ease, transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.6s ease, visibility 0.6s; }
+.screen.is-active { filter: none; }
+
+/* ---------- Entradas escalonadas por pantalla ---------- */
+.screen.is-active .hero .lead { animation: blurIn 0.8s ease 0.7s backwards; }
+.screen.is-active .hero .btn { animation: popBounce 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) 0.95s backwards, btnGlow 2.8s ease-in-out 2s infinite; }
+.screen.is-active .test-card,
+.screen.is-active .story-panel { animation: cardIn 0.75s cubic-bezier(0.2, 0.9, 0.25, 1.1) 0.1s backwards; }
+.screen.is-active .explore-nav { animation: blurIn 0.7s ease 0.35s backwards; }
+.screen.is-active .hero .ch {
+  display: inline-block;
+  font-style: normal;
+  animation: letterIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) calc(0.25s + var(--i, 0) * 0.055s) backwards,
+             letterWave 3.8s ease-in-out calc(1.8s + var(--i, 0) * 0.12s) infinite;
+}
+.hero .ch { display: inline-block; font-style: normal; }
+.q-text { animation: blurIn 0.5s ease backwards; }
+.opt { animation: optIn 0.55s cubic-bezier(0.2, 0.9, 0.3, 1.1) backwards; }
+.opt:nth-child(1) { animation-delay: 0.05s; }
+.opt:nth-child(2) { animation-delay: 0.12s; }
+.opt:nth-child(3) { animation-delay: 0.19s; }
+.opt:nth-child(4) { animation-delay: 0.26s; }
+.opt:active { transform: scale(0.97); }
+.explore-info.swap .tag { animation: popBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) backwards; }
+.explore-info.swap .tag:nth-child(2) { animation-delay: 0.08s; }
+.explore-info.swap .tag:nth-child(3) { animation-delay: 0.16s; }
+.story-panel h2.swap { animation: blurIn 0.6s ease backwards; }
+
+/* ---------- Personajes: entrada con desenfoque + rebote, halo, squash & stretch ---------- */
+@keyframes inLeft {
+  0%   { opacity: 0; filter: blur(12px); transform: translate(calc(-50% - 45vw), -50%) scale(0.6) rotate(-8deg); }
+  60%  { opacity: 1; filter: blur(0); transform: translate(calc(-50% + 1.6vw), -50%) scale(1.07) rotate(2deg); }
+  100% { opacity: 1; filter: blur(0); transform: translate(-50%, -50%); }
+}
+@keyframes inRight {
+  0%   { opacity: 0; filter: blur(12px); transform: translate(calc(-50% + 45vw), -50%) scale(0.6) rotate(8deg); }
+  60%  { opacity: 1; filter: blur(0); transform: translate(calc(-50% - 1.6vw), -50%) scale(1.07) rotate(-2deg); }
+  100% { opacity: 1; filter: blur(0); transform: translate(-50%, -50%); }
+}
+@keyframes inUp {
+  0%   { opacity: 0; filter: blur(12px); transform: translate(-50%, calc(-50% + 40vh)) scale(0.7); }
+  60%  { opacity: 1; filter: blur(0); transform: translate(-50%, calc(-50% - 1.8vh)) scale(1.06); }
+  100% { opacity: 1; filter: blur(0); transform: translate(-50%, -50%); }
+}
+@keyframes inPop {
+  0%   { opacity: 0; filter: blur(14px); transform: translate(-50%, -50%) scale(0.2); }
+  55%  { opacity: 1; filter: blur(0); transform: translate(-50%, -50%) scale(1.14); }
+  78%  { transform: translate(-50%, -50%) scale(0.96); }
+  100% { opacity: 1; filter: blur(0); transform: translate(-50%, -50%) scale(1); }
+}
+@keyframes bob {
+  0%, 100% { transform: translateY(0) rotate(-1.5deg) scale(1.02, 0.98); }
+  50%      { transform: translateY(calc(var(--amp, 12px) * -1)) rotate(1.5deg) scale(0.985, 1.015); }
+}
+
+.sprite-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 4%;
+  z-index: -1;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0) 66%);
+  animation: haloPulse 4.6s ease-in-out infinite;
+}
+.stage-wrap::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  width: min(78%, 420px);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.65), rgba(255, 220, 240, 0.25) 45%, rgba(255, 255, 255, 0) 70%);
+  animation: haloPulse 5s ease-in-out infinite;
+}
+
+@media (hover: hover) {
+  .sprite-enter { transition: scale 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  .sprite-wrap:hover .sprite-enter { scale: 1.07; }
+  .thumb:hover { transform: translateY(-3px) scale(1.06); }
+  .dock button:hover:not([aria-current="page"]) { background: rgba(92, 184, 255, 0.16); }
+  .round:hover { transform: scale(1.08); }
+  .btn.primary::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.7) 50%, transparent 70%);
+    transform: translateX(-120%);
+    pointer-events: none;
+  }
+  .btn.primary:hover::after { transform: translateX(120%); transition: transform 0.7s ease; }
+}
+.round { transition: transform 0.2s ease; }
+.round:active { transform: scale(0.92); }
+
+/* ---------- Ripples y anillos al tocar ---------- */
+.btn, .opt, .dock button, .round { position: relative; overflow: hidden; }
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.9), rgba(92, 184, 255, 0.35));
+  transform: scale(0);
+  animation: ripple 0.65s ease-out forwards;
+}
+.tap-ring {
+  position: fixed;
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+  z-index: 18;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.8);
+  pointer-events: none;
+  animation: tapRing 0.7s ease-out forwards;
+}
+
+/* ---------- Dock con píldora deslizante ---------- */
+.dock { animation: dockIn 0.9s cubic-bezier(0.2, 0.9, 0.25, 1.1) 0.9s backwards; }
+.dock button { position: relative; z-index: 1; }
+.dock button[aria-current="page"] { background: transparent; color: #fff; }
+.dock-pill {
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 0;
+  width: 0;
+  z-index: 0;
+  border-radius: 999px;
+  background: var(--ink);
+  box-shadow: 0 6px 14px rgba(22, 54, 92, 0.3);
+  pointer-events: none;
+  transition: transform 0.5s cubic-bezier(0.34, 1.3, 0.5, 1), width 0.5s cubic-bezier(0.34, 1.3, 0.5, 1);
+}
+.sound-btn { animation: dockIn 0.8s ease 1.1s backwards; }
+
+/* ---------- Animaciones nuevas ---------- */
+@keyframes loaderFail { to { opacity: 0; visibility: hidden; } }
+@keyframes loaderBounce {
+  0%, 100% { transform: translateY(0) scale(1.04, 0.96); }
+  50%      { transform: translateY(-18px) scale(0.97, 1.03); }
+}
+@keyframes dotHop { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-5px); } }
+@keyframes bgBreath { from { scale: 1; } to { scale: 1.045; } }
+@keyframes auroraDrift {
+  from { transform: translate3d(-3%, -2%, 0) rotate(-3deg) scale(1); }
+  to   { transform: translate3d(3%, 3%, 0) rotate(3deg) scale(1.1); }
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes cloudDrift {
+  from { transform: translate3d(-110%, 0, 0); }
+  to   { transform: translate3d(100vw, 0, 0); }
+}
+@keyframes doodleFloat {
+  0%, 100% { transform: translateY(0) rotate(-6deg); }
+  50%      { transform: translateY(-14px) rotate(6deg); }
+}
+@keyframes twinkle {
+  0%, 100% { opacity: 0.35; scale: 0.88; }
+  50%      { opacity: 0.9; scale: 1.08; }
+}
+@keyframes haloPulse {
+  0%, 100% { opacity: 0.55; scale: 0.96; }
+  50%      { opacity: 1; scale: 1.06; }
+}
+@keyframes curtainHop {
+  0%   { opacity: 0; transform: translate(-50%, -30%) scale(0.5); }
+  35%  { opacity: 1; transform: translate(-50%, -62%) scale(1.08, 0.95); }
+  60%  { opacity: 1; transform: translate(-50%, -50%) scale(0.96, 1.04); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+@keyframes blurIn {
+  from { opacity: 0; filter: blur(10px); transform: translateY(14px); }
+  to   { opacity: 1; filter: blur(0); transform: none; }
+}
+@keyframes popBounce {
+  0%   { opacity: 0; transform: scale(0.6) translateY(16px); }
+  60%  { opacity: 1; transform: scale(1.08) translateY(-3px); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes cardIn {
+  from { opacity: 0; filter: blur(8px); transform: translateY(30px) scale(0.96); }
+  to   { opacity: 1; filter: blur(0); transform: none; }
+}
+@keyframes optIn {
+  from { opacity: 0; transform: translateX(-18px) scale(0.97); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes letterIn {
+  0%   { opacity: 0; transform: translateY(0.5em) scale(0.5) rotate(-12deg); filter: blur(6px); }
+  100% { opacity: 1; transform: none; filter: blur(0); }
+}
+@keyframes letterWave {
+  0%, 60%, 100% { translate: 0 0; }
+  30%           { translate: 0 -0.07em; }
+}
+@keyframes btnGlow {
+  0%, 100% { box-shadow: 0 10px 24px rgba(20, 70, 130, 0.22); }
+  50%      { box-shadow: 0 10px 30px rgba(255, 158, 199, 0.65), 0 0 0 6px rgba(255, 255, 255, 0.28); }
+}
+@keyframes ripple { to { transform: scale(4); opacity: 0; } }
+@keyframes tapRing { to { transform: scale(3.6); opacity: 0; } }
+@keyframes dockIn {
+  from { opacity: 0; translate: 0 70px; }
+  to   { opacity: 1; translate: 0 0; }
+}
+
+/* ---------- Móvil ---------- */
+@media (max-width: 720px) {
+  .aurora { mix-blend-mode: normal; opacity: 0.32; }
+  .rays { opacity: 0.32; }
+  .screen { filter: blur(5px); }
+  .screen.is-active { filter: none; }
+}
+
+/* ---------- Reducir movimiento ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .doodles, .cloud, .aurora, .rays, .curtain-sprite { display: none; }
+  .screen, .screen.is-active { filter: none; }
+  .scene-bg { animation: none; }
+  .loader { transition-duration: 0.01ms; }
+}

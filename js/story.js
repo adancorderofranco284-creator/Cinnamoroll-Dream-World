@@ -63,11 +63,15 @@
     var last = index === chapters.length - 1;
     counter.textContent = (index + 1) + ' / ' + chapters.length;
     titleEl.textContent = ch.title;
+    titleEl.classList.remove('swap');
+    void titleEl.offsetWidth;
+    titleEl.classList.add('swap');
     tint.style.background = ch.tint || 'transparent';
     prevBtn.disabled = index === 0;
     nextBtn.textContent = last ? 'Volver al inicio' : 'Siguiente';
     buildScene(ch);
     type(ch.text);
+    if (CDW.effects) CDW.effects.burst(window.innerWidth / 2, window.innerHeight * 0.38, 14, 'love');
   }
 
   prevBtn.addEventListener('click', function () {

@@ -22,8 +22,8 @@
     // Rebote (propiedad "scale", independiente del transform de entrada y de la flotación)
     if (wrap.animate) {
       wrap.animate(
-        [{ scale: 1 }, { scale: 1.14 }, { scale: 0.96 }, { scale: 1 }],
-        { duration: 520, easing: 'ease-out' }
+        [{ scale: '1 1' }, { scale: '1.2 0.8' }, { scale: '0.9 1.14' }, { scale: '1.06 0.96' }, { scale: '1 1' }],
+        { duration: 640, easing: 'ease-out' }
       );
     }
     // Anillo luminoso centrado en el personaje
@@ -33,7 +33,7 @@
     host.appendChild(ring);
     setTimeout(function () { if (ring.parentNode) ring.parentNode.removeChild(ring); }, 650);
 
-    if (CDW.effects) CDW.effects.burst(x, y);
+    if (CDW.effects) CDW.effects.burst(x, y, 14, 'love');
     if (CDW.sound) CDW.sound.play('pop');
   }
 
