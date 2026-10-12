@@ -62,6 +62,13 @@
   var soundBtn = doc.getElementById('sound-toggle');
   var audioCfg = CDW.config.audio || {};
 
+  /* Lista de canciones (config.audio.playlist). Compatibilidad: si solo existe audio.ambient, se usa como lista de una. */
+  var tracks = (audioCfg.playlist || []).filter(Boolean);
+  if (!tracks.length && audioCfg.ambient) tracks = [audioCfg.ambient];
+  var trackIndex = 0;
+  var failStreak = 0;
+  var wantMusic = false;   // el usuario (o el arranque automático) quiere música sonando
+
   function makeAudio(path, loop, vol) {
     if (!path) return null;
     var a = new Audio(path);
@@ -81,13 +88,59 @@
     try { a.currentTime = 0; var p = a.play(); if (p && p.catch) p.catch(function () {}); } catch (err) {}
   }
 
+  /* Un único <audio> para toda la lista: al cambiar de canción solo cambia su src. Así no hay
+     reproducción duplicada y, en móvil, el permiso que dio el primer toque sigue valiendo. */
+  function trackUrl(i) { return encodeURI(tracks[i]); }
+
+  function makeMusic() {
+    var a = new Audio();
+    a.preload = 'auto';
+    a.loop = tracks.length === 1;
+    a.volume = 0.35;
+    a.addEventListener('ended', function () { loadTrack(trackIndex + 1, true); });
+    a.addEventListener('canplay', function () { failStreak = 0; });
+    a.addEventListener('error', onTrackError);
+    a.src = trackUrl(0);
+    return a;
+  }
+
+  function loadTrack(i, andPlay) {
+    trackIndex = (i + tracks.length) % tracks.length;
+    ambient.src = trackUrl(trackIndex);
+    if (!andPlay) return;
+    var p = ambient.play();
+    if (p && p.then) {
+      p.then(function () { if (wantMusic && !soundOn) markOn(); })
+       .catch(function (err) {
+        if (!err || err.name === 'AbortError') return;
+        if (err.name === 'NotAllowedError') { armGesture(); return; }
+        console.warn('[CDW] No se pudo reproducir:', tracks[trackIndex], err);
+      });
+    }
+  }
+
+  function onTrackError() {
+    console.warn('[CDW] No se pudo cargar la canción:', tracks[trackIndex]);
+    failStreak++;
+    if (failStreak >= tracks.length) {
+      console.error('[CDW] Ninguna canción de la lista se pudo cargar.');
+      wantMusic = false;
+      soundOn = false;
+      soundBtn.textContent = 'Sonido: no se pudo cargar la música';
+      soundBtn.setAttribute('aria-pressed', 'false');
+      return;
+    }
+    loadTrack(trackIndex + 1, wantMusic);   // salta a la siguiente y continúa
+  }
+
   function setSound(on) {
     soundOn = on;
+    wantMusic = on;
     if (typeof disarm === 'function') disarm();
     soundBtn.textContent = 'Sonido: ' + (on ? 'on' : 'off');
     soundBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
-    if (!ambient && audioCfg.ambient) ambient = makeAudio(audioCfg.ambient, true, 0.35);
-    if (on && !audioCfg.ambient) soundBtn.textContent = 'Sonido: sin canción en config.js';
+    if (!ambient && tracks.length) ambient = makeMusic();
+    if (on && !tracks.length) soundBtn.textContent = 'Sonido: sin canciones en config.js';
     if (ambient) {
       if (on) {
         var p = ambient.play();
@@ -99,7 +152,7 @@
     }
   }
 
-  var hasAudio = !!(audioCfg.ambient || audioCfg.click || audioCfg.pop);
+  var hasAudio = !!(tracks.length || audioCfg.click || audioCfg.pop);
   soundBtn.title = hasAudio ? 'Activar o silenciar el sonido' : 'Aún no hay archivos en la carpeta Sonidos/';
   soundBtn.addEventListener('click', function () { setSound(!soundOn); });
   CDW.sound = { play: play, set: setSound };
@@ -124,6 +177,7 @@
   function onFirstGesture(e) {
     if (e.target && e.target.closest && e.target.closest('#sound-toggle')) return; // lo gestiona el propio botón
     if (soundOn) { disarm(); return; }
+    wantMusic = true;
     var p = ambient.play();
     if (p && p.then) {
       p.then(function () { markOn(); disarm(); })
@@ -132,17 +186,21 @@
   }
 
   function autoStart() {
-    if (!audioCfg.ambient) return;
-    ambient = ambient || makeAudio(audioCfg.ambient, true, 0.35);
+    if (!tracks.length) return;
+    ambient = ambient || makeMusic();
+    wantMusic = true;
     var p = ambient.play();
     if (p && p.then) {
       p.then(markOn).catch(function (err) {
-        if (err && err.name === 'NotAllowedError' && !armed) {
-          armed = true;
-          armEvents.forEach(function (n) { doc.addEventListener(n, onFirstGesture, true); });
-        }
+        if (err && err.name === 'NotAllowedError') armGesture();
       });
     }
+  }
+
+  function armGesture() {
+    if (armed) return;
+    armed = true;
+    armEvents.forEach(function (n) { doc.addEventListener(n, onFirstGesture, true); });
   }
 
   // Pausa la música cuando la pestaña no está visible y la reanuda al volver

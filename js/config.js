@@ -182,10 +182,18 @@ CDW.config = {
   },
 
   /* ---------- SONIDOS ----------
-     Carpeta Sonidos/ preparada. Escribe aquí la ruta del archivo cuando lo añadas,
-     por ejemplo: ambient: 'Sonidos/ambiente.mp3'. Mientras sea null, no suena nada. */
+     playlist: canciones locales de la carpeta Sonidos/, en orden. Al terminar una suena la
+     siguiente y, tras la última, vuelve a la primera. Rutas relativas (válidas en GitHub Pages
+     aunque la web esté en una subruta). Los nombres están escritos con códigos \uXXXX para que
+     no dependan de la codificación del archivo; el nombre real va en el comentario de cada línea.
+     click / pop: sonidos opcionales (null = sin sonido). */
   audio: {
-    ambient: 'Sonidos/Piano.mp3',  // música de fondo en bucle
+    playlist: [
+      'Sonidos/Star Dome (\u30b9\u30bf\u30fc\u30c9\u30fc\u30e0) \u2014 Cinnamoroll.mp3',  // 1. Star Dome (スタードーム) — Cinnamoroll.mp3
+      'Sonidos/Tokimeki Rainbow (\u3068\u304d\u3081\u304d\u30ec\u30a4\u30f3\u30dc\u30fc) \u2014 Cinnamoroll.mp3',  // 2. Tokimeki Rainbow (ときめきレインボー) — Cinnamoroll.mp3
+      'Sonidos/Shiawase no Label.mp3',  // 3. Shiawase no Label.mp3
+      'Sonidos/Fure Fure Ganbare! (\u3075\u308c\u30fc\u3075\u308c\u30fc\u304c\u3093\u3070\u308c\u30fc\uff01).mp3'  // 4. Fure Fure Ganbare! (ふれーふれーがんばれー！).mp3
+    ],
     click: null,     // sonido al pulsar botones
     pop: null        // sonido al tocar un personaje
   },
